@@ -29,7 +29,9 @@ int handle_connection(int connectionfd) {
             break;
         }
         // (2) Print out the message
-        received++;
+        if(sizeof(buf)==1000){
+			received++;
+		}
 	    //printf("received a connection : %s\n",buf);
        
 	}
@@ -118,7 +120,9 @@ int send_message(const char *hostname, int port, int interval) {
 		if((double)(middle_t - start_t)/CLOCKS_PER_SEC>=interval){
 			break;
 		}
-		send(sockfd, message, MAX_MESSAGE_SIZE, 0);
+		if(send(sockfd, message, MAX_MESSAGE_SIZE, 0)==-1){
+			continue;
+		}
 		sent++;
 	}
 	send(sockfd,"exit",4,0);
