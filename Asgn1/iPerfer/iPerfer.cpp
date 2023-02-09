@@ -151,11 +151,11 @@ int main(int argc, const char **argv) {
 	
 	const char *def = argv[1];
     if(strcmp(def,"-s") == 0){
-        if(argc != 3){
+        if(argc != 4){
             printf("Error: missing or extra arguments");
 			return 1;
         }
-        int port = atoi(argv[2]);
+        int port = atoi(argv[3]);
         
         if(port<1024 || port>65535){
             printf("Error: port number must be in the range of [1024, 65535]");
@@ -167,12 +167,12 @@ int main(int argc, const char **argv) {
 	    return 0;
 
     }else{
-		if(argc != 5){
+		if(argc != 8){
 			printf("Error: missing or extra arguments\n");
 		}
-		const char *hostname = argv[2];
-		int port = atoi(argv[3]);
-		int time = atoi(argv[4]);
+		const char *hostname = argv[3];
+		int port = atoi(argv[5]);
+		int time = atoi(argv[7]);
 		if(port<1024 || port>65535){
             printf("Error: port number must be in the range of [1024, 65535]\n");
 			return 1;
