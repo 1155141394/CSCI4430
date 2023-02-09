@@ -9,7 +9,6 @@
 static const size_t MAX_MESSAGE_SIZE = 1000;
 
 int handle_connection(int connectionfd) {
-    int unit = 1000;
 	printf("New connection %d\n", connectionfd);
 	int recvbytes;
 	char buf[MAX_MESSAGE_SIZE];//传输的数据
@@ -20,13 +19,13 @@ int handle_connection(int connectionfd) {
     start_t = clock();
     while(1){
         memset(buf,0,sizeof(buf));
-		if((recvbytes = recv(connectionfd,buf,sizeof(buf),MSG_NOSIGNAL)) == -1) {//接收客户端的请求
+		if((recvbytes = recv(connectionfd,buf,sizeof(buf),0)) == -1) {//接收客户端的请求
             perror("recv");
             return -1;
         }
         if(strcmp(buf,"exit") == 0){
             printf("Connect finished\n");
-			send(connectionfd,"finish",6,MSG_NOSIGNAL);
+			send(connectionfd,"finish",6,0);
             break;
         }
         // (2) Print out the message
@@ -50,7 +49,11 @@ int run_server(int port, int queue_size) {
 	// (1) Create socket
 	int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	// (2) Set the "reuse port" socket option
-
+	int yesval = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yesval, sizeof(yesval)) == -1) {
+		perror("Error setting socket options");
+		return -1;
+	}
 	// (3) Create a sockaddr_in struct for the proper port and bind() to it.
 	struct sockaddr_in addr;
 	if (make_server_sockaddr(&addr, port) == -1) {
@@ -58,18 +61,21 @@ int run_server(int port, int queue_size) {
 	}
 
 	// (3b) Bind to the port.
-	memset(&addr, 0, sizeof(addr)); 
-	addr.sin_family = AF_INET; 
-	addr.sin_addr.s_addr = INADDR_ANY; 
-	addr.sin_port = htons(port);
-	bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
+	// memset(&addr, 0, sizeof(addr)); 
+	// addr.sin_family = AF_INET; 
+	// addr.sin_addr.s_addr = INADDR_ANY; 
+	// addr.sin_port = htons(port);
+	if (bind(sockfd, (sockaddr *) &addr, sizeof(addr)) == -1) {
+		perror("Error binding stream socket");
+		return -1;
+	}
 
 	// (3c) Detect which port was chosen.
 	port = get_port_number(sockfd);
 	printf("Server listening on port %d...\n", port);
 
 	// (4) Begin listening for incoming connections.
-	listen(sockfd, 10);
+	listen(sockfd, queue_size);
 	// (5) Serve incoming connections one by one forever.
 	socklen_t addr_len = sizeof(addr); 
 	int conn = accept(sockfd, (struct sockaddr *) &addr, &addr_len);
@@ -82,7 +88,7 @@ int run_server(int port, int queue_size) {
 int send_message(const char *hostname, int port, int interval) {
 	char message[MAX_MESSAGE_SIZE] = {0}; 
 	// (1) Create a socket
-	int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	
 	struct hostent *server = gethostbyname(hostname); 
 
@@ -93,10 +99,10 @@ int send_message(const char *hostname, int port, int interval) {
 	}
 	
 	// (3) Connect to remote server
-	memset(&addr, 0, sizeof(addr)); 
-	addr.sin_family = AF_INET; 
-	//addr.sin_addr.s_addr = * (unsigned long *) server->h_addr_list[0]; 
-	addr.sin_port = htons(port);
+	// memset(&addr, 0, sizeof(addr)); 
+	// addr.sin_family = AF_INET; 
+	// addr.sin_addr.s_addr = * (unsigned long *) server->h_addr_list[0]; 
+	// addr.sin_port = htons(port);
 
 	int fail = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));//开始连接
     if (fail){
@@ -112,11 +118,11 @@ int send_message(const char *hostname, int port, int interval) {
 		if((double)(middle_t - start_t)/CLOCKS_PER_SEC>=interval){
 			break;
 		}
-		send(sockfd, message, MAX_MESSAGE_SIZE, MSG_NOSIGNAL);
+		send(sockfd, message, MAX_MESSAGE_SIZE, 0);
 		sent++;
 	}
-	send(sockfd,"exit",4,MSG_NOSIGNAL);
-	int recvbytes = recv(sockfd,message,sizeof(message),MSG_NOSIGNAL);
+	send(sockfd,"exit",4,0);
+	int recvbytes = recv(sockfd,message,sizeof(message),0);
 	if(strcmp(message,"finish")==0){
 		end_t = clock();
 	}
