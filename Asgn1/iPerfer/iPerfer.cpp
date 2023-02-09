@@ -29,9 +29,10 @@ int handle_connection(int connectionfd) {
             break;
         }
         // (2) Print out the message
-        if(recvbytes==1000){
-			received++;
-		}
+        // if(recvbytes==1000){
+		// 	received++;
+		// }
+		received++;
 	    //printf("received a connection : %s\n",buf);
        
 	}
