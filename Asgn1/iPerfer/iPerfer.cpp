@@ -115,15 +115,18 @@ int send_message(const char *hostname, int port, int interval) {
 	clock_t start_t, end_t, middle_t;
 	start_t = clock();
 	int sent = 0; 
+	int sendbytes;
 	while(1){
 		middle_t = clock();
 		if((double)(middle_t - start_t)/CLOCKS_PER_SEC>=interval){
 			break;
 		}
-		if(send(sockfd, message, MAX_MESSAGE_SIZE, 0)==-1){
-			continue;
+		if((sendbytes=send(sockfd, message, MAX_MESSAGE_SIZE, 0))==-1){
+			return -1;
 		}
-		sent++;
+		if(sendbytes==1000){
+			sent++;
+		}
 	}
 	send(sockfd,"exit",4,0);
 	int recvbytes = recv(sockfd,message,sizeof(message),0);
