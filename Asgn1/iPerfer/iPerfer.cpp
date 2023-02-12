@@ -23,9 +23,10 @@ int handle_connection(int connectionfd) {
             perror("recv");
             return -1;
         }
-        if(strcmp(buf,"exit") == 0){
+		int len = strlen(buf);
+        if(buf[len-1]=='e'){
             printf("Connect finished\n");
-			send(connectionfd,"finish",6,0);
+			send(connectionfd,"f",1,0);
             break;
         }
         // (2) Print out the message
@@ -129,9 +130,10 @@ int send_message(const char *hostname, int port, int interval) {
 		sent += sendbytes;
 	}
 	sent = (int)(sent/1000);
-	send(sockfd,"exit",4,0);
+	send(sockfd,"e",1,0);
 	int recvbytes = recv(sockfd,message,sizeof(message),0);
-	if(strcmp(message,"finish")==0){
+	int len = strlen(message);
+	if(message[len-1]=='f'){
 		end_t = clock();
 	}
 	double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
