@@ -16,7 +16,7 @@ int handle_connection(int connectionfd) {
 	// (1) Receive message from client.
     time_t start_t, end_t;
 	int received = 0;
-    start_t = clock();
+    time(&start_t);
     while(1){
         memset(buf,0,sizeof(buf));
 		if((recvbytes = recv(connectionfd,buf,sizeof(buf),MSG_NOSIGNAL)) == -1) {//接收客户端的请求
@@ -35,7 +35,7 @@ int handle_connection(int connectionfd) {
 	    //printf("received a connection : %s\n",buf);
        
 	}
-    end_t = clock();
+    time(&end_t);
 	received = received/1000;
     double total_t = difftime(end_t,start_t);
     double rate = received*8/(1000*total_t);
