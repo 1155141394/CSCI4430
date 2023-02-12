@@ -19,14 +19,15 @@ int handle_connection(int connectionfd) {
     start_t = clock();
     while(1){
         memset(buf,0,sizeof(buf));
-		if((recvbytes = recv(connectionfd,buf,sizeof(buf),0)) == -1) {//接收客户端的请求
+		if((recvbytes = recv(connectionfd,buf,sizeof(buf),MSG_NOSIGNAL)) == -1) {//接收客户端的请求
             perror("recv");
             return -1;
         }
 		//int len = strlen(buf);
-        if(buf[recvbytes-1]=='e'){
+        if(buf[recvbytes-1]=='1'){
             //printf("Connect finished\n");
-			send(connectionfd,"yesf",4,0);
+			char finish[2] = "0";
+			send(connectionfd,finish,strlen(finish),MSG_NOSIGNAL);
             break;
         }
         // (2) Print out the message
@@ -35,7 +36,7 @@ int handle_connection(int connectionfd) {
        
 	}
     end_t = clock();
-	received = (int)(received/1000);
+	received = received/1000;
     double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
     double rate = received*8/(1000*total_t);
     printf("Received=%d KB, Rate=%.3f Mbps\n",received,rate);
@@ -83,6 +84,7 @@ int run_server(int port, int queue_size) {
 	socklen_t addr_len = sizeof(addr); 
 	int conn = accept(sockfd, (struct sockaddr *) &addr, &addr_len);  
 	handle_connection(conn);  
+	shutdown(sockfd,1);
 	close(sockfd);
 	return 0;
 
@@ -122,24 +124,25 @@ int send_message(const char *hostname, int port, int interval) {
 		if((double)(middle_t - start_t)/CLOCKS_PER_SEC>=interval){
 			break;
 		}
-		if((sendbytes=send(sockfd, message, MAX_MESSAGE_SIZE, 0))==-1){
+		if((sendbytes=send(sockfd, message, MAX_MESSAGE_SIZE, MSG_NOSIGNAL))==-1){
 			return -1;
 		}
 		sent += sendbytes;
 	}
-	sent = (int)(sent/1000);
-	send(sockfd,"yese",4,0);
-	int recvbytes = recv(sockfd,message,sizeof(message),0);
+	sent = sent/1000;
+	char finish[2]="1";
+	send(sockfd,finish,strlen(finish),0);
+	int recvbytes = recv(sockfd,message,sizeof(message),MSG_NOSIGNAL);
 	//int len = strlen(message);
-	if(message[recvbytes-1]=='f'){
+	if(message[recvbytes-1]=='0'){
 		end_t = clock();
 	}
 	double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
     double rate = sent*8/(1000*total_t);
     printf("Sent=%d KB, Rate=%.3f Mbps\n",sent,rate);
 	// (5) Close connection
+	shutdown(sockfd,1);
 	close(sockfd);
-
 	return 0;
 }
 
