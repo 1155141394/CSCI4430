@@ -23,8 +23,8 @@ int handle_connection(int connectionfd) {
             perror("recv");
             return -1;
         }
-		int len = strlen(buf);
-        if(buf[len-1]=='e'){
+		//int len = strlen(buf);
+        if(buf[recvbytes-1]=='e'){
             //printf("Connect finished\n");
 			send(connectionfd,"yesf",4,0);
             break;
@@ -130,8 +130,8 @@ int send_message(const char *hostname, int port, int interval) {
 	sent = (int)(sent/1000);
 	send(sockfd,"yese",4,0);
 	int recvbytes = recv(sockfd,message,sizeof(message),0);
-	int len = strlen(message);
-	if(message[len-1]=='f'){
+	//int len = strlen(message);
+	if(message[recvbytes-1]=='f'){
 		end_t = clock();
 	}
 	double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
