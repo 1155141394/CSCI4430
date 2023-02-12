@@ -9,7 +9,7 @@
 static const size_t MAX_MESSAGE_SIZE = 1000;
 
 int handle_connection(int connectionfd) {
-	printf("New connection %d\n", connectionfd);
+	//printf("New connection %d\n", connectionfd);
 	int recvbytes;
 	char buf[MAX_MESSAGE_SIZE];//传输的数据
 
@@ -25,7 +25,7 @@ int handle_connection(int connectionfd) {
         }
 		int len = strlen(buf);
         if(buf[len-1]=='e'){
-            printf("Connect finished\n");
+            //printf("Connect finished\n");
 			send(connectionfd,"f",1,0);
             break;
         }
@@ -38,8 +38,7 @@ int handle_connection(int connectionfd) {
 	received = (int)(received/1000);
     double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
     double rate = received*8/(1000*total_t);
-    printf("Received=%d KB\n",received);
-    printf("Rate=%.3f Mbps\n",rate);
+    printf("Received=%d KB, Rate=%.3f Mbps\n",received,rate);
 	
 	// (3) Close connection
 	if((recvbytes = recv(connectionfd,buf,sizeof(buf),0))==0){
@@ -82,8 +81,7 @@ int run_server(int port, int queue_size) {
 	listen(sockfd, queue_size);
 	// (5) Serve incoming connections one by one forever.
 	socklen_t addr_len = sizeof(addr); 
-	int conn = accept(sockfd, (struct sockaddr *) &addr, &addr_len);
-	printf("客户端%s连接成功",inet_ntoa(addr.sin_addr));     
+	int conn = accept(sockfd, (struct sockaddr *) &addr, &addr_len);  
 	handle_connection(conn);  
 	close(sockfd);
 	return 0;
@@ -138,8 +136,7 @@ int send_message(const char *hostname, int port, int interval) {
 	}
 	double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
     double rate = sent*8/(1000*total_t);
-    printf("Sent=%d KB\n",sent);
-    printf("Rate=%.3f Mbps\n",rate);
+    printf("Sent=%d KB, Rate=%.3f Mbps\n",sent,rate);
 	// (5) Close connection
 	close(sockfd);
 
@@ -151,7 +148,10 @@ int send_message(const char *hostname, int port, int interval) {
 
 int main(int argc, const char **argv) {
 	// Parse command line arguments
-	
+	if(argc != 4 && argc != 8){
+		printf("Error: missing or extra arguments");
+			return 1;
+	}
 	const char *def = argv[1];
     if(strcmp(def,"-s") == 0){
         if(argc != 4){
@@ -169,7 +169,7 @@ int main(int argc, const char **argv) {
 	    }
 	    return 0;
 
-    }else{
+    }else if(strcmp(def,"-c") == 0){
 		if(argc != 8){
 			printf("Error: missing or extra arguments\n");
 		}
@@ -180,14 +180,16 @@ int main(int argc, const char **argv) {
             printf("Error: port number must be in the range of [1024, 65535]\n");
 			return 1;
         }
-		if(time<0){
+		if(time<=0){
 			printf("Error: time argument must be greater than 0\n");
 			return 1;
 		}
 		if (send_message(hostname, port, time) == -1) {
 		return 1;
-	}
+		}
 
+	}else{
+		printf("Error: missing or extra arguments\n");
 	}
 
 	return 0;
