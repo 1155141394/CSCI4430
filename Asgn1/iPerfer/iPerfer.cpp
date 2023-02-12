@@ -26,7 +26,7 @@ int handle_connection(int connectionfd) {
 		int len = strlen(buf);
         if(buf[len-1]=='e'){
             //printf("Connect finished\n");
-			send(connectionfd,"f",1,0);
+			send(connectionfd,"yesf",4,0);
             break;
         }
         // (2) Print out the message
@@ -128,7 +128,7 @@ int send_message(const char *hostname, int port, int interval) {
 		sent += sendbytes;
 	}
 	sent = (int)(sent/1000);
-	send(sockfd,"e",1,0);
+	send(sockfd,"yese",4,0);
 	int recvbytes = recv(sockfd,message,sizeof(message),0);
 	int len = strlen(message);
 	if(message[len-1]=='f'){
