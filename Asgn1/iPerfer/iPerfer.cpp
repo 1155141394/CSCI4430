@@ -11,27 +11,25 @@ static const size_t MAX_MESSAGE_SIZE = 1000;
 int handle_connection(int connectionfd) {
 	//printf("New connection %d\n", connectionfd);
 	int recvbytes;
-	char buf[1001];//传输的数据
+	char buf[10000];//传输的数据
 
 	// (1) Receive message from client.
     time_t start_t, end_t;
 	int received = 0;
     time(&start_t);
     while(1){
-        memset(buf,0,sizeof(buf));
 		if((recvbytes = recv(connectionfd,&buf,1000,MSG_NOSIGNAL)) == -1) {//接收客户端的请求
             perror("recv");
             return -1;
         }
-		//int len = strlen(buf);
+		received += recvbytes;
         if(buf[recvbytes-1]=='1'){
             //printf("Connect finished\n");
 			char finish[2] = "0";
 			send(connectionfd,&finish,strlen(finish),MSG_NOSIGNAL);
             break;
         }
-        // (2) Print out the message
-        received += recvbytes;
+        
 	    //printf("received a connection : %s\n",buf);
        
 	}
