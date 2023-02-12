@@ -11,7 +11,7 @@ static const size_t MAX_MESSAGE_SIZE = 1000;
 int handle_connection(int connectionfd) {
 	//printf("New connection %d\n", connectionfd);
 	int recvbytes;
-	char buf[MAX_MESSAGE_SIZE];//传输的数据
+	char buf[1001];//传输的数据
 
 	// (1) Receive message from client.
     time_t start_t, end_t;
@@ -19,7 +19,7 @@ int handle_connection(int connectionfd) {
     time(&start_t);
     while(1){
         memset(buf,0,sizeof(buf));
-		if((recvbytes = recv(connectionfd,buf,sizeof(buf),MSG_NOSIGNAL)) == -1) {//接收客户端的请求
+		if((recvbytes = recv(connectionfd,&buf,1000,MSG_NOSIGNAL)) == -1) {//接收客户端的请求
             perror("recv");
             return -1;
         }
@@ -27,7 +27,7 @@ int handle_connection(int connectionfd) {
         if(buf[recvbytes-1]=='1'){
             //printf("Connect finished\n");
 			char finish[2] = "0";
-			send(connectionfd,finish,strlen(finish),MSG_NOSIGNAL);
+			send(connectionfd,&finish,strlen(finish),MSG_NOSIGNAL);
             break;
         }
         // (2) Print out the message
@@ -65,7 +65,7 @@ int run_server(int port, int queue_size) {
 	}
 
 	// (3b) Bind to the port.
-	// memset(&addr, 0, sizeof(addr)); 
+	memset(&addr, 0, sizeof(addr)); 
 	// addr.sin_family = AF_INET; 
 	// addr.sin_addr.s_addr = INADDR_ANY; 
 	// addr.sin_port = htons(port);
@@ -92,6 +92,7 @@ int run_server(int port, int queue_size) {
 
 int send_message(const char *hostname, int port, int interval) {
 	char message[MAX_MESSAGE_SIZE] = {0}; 
+	memset(message, '0', 1000);
 	// (1) Create a socket
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	
@@ -104,7 +105,7 @@ int send_message(const char *hostname, int port, int interval) {
 	}
 	
 	// (3) Connect to remote server
-	// memset(&addr, 0, sizeof(addr)); 
+	memset(&addr, 0, sizeof(addr)); 
 	// addr.sin_family = AF_INET; 
 	// addr.sin_addr.s_addr = * (unsigned long *) server->h_addr_list[0]; 
 	// addr.sin_port = htons(port);
@@ -124,7 +125,7 @@ int send_message(const char *hostname, int port, int interval) {
 		if(difftime(middle_t,start_t)>=(double)interval){
 			break;
 		}
-		if((sendbytes=send(sockfd, message, MAX_MESSAGE_SIZE, MSG_NOSIGNAL))==-1){
+		if((sendbytes=send(sockfd, &message, strlen(message), MSG_NOSIGNAL))==-1){
 			return -1;
 		}
 		sent += sendbytes;
@@ -132,11 +133,7 @@ int send_message(const char *hostname, int port, int interval) {
 	sent = sent/1000;
 	char finish[2]="1";
 	send(sockfd,finish,strlen(finish),MSG_NOSIGNAL);
-	int recvbytes = recv(sockfd,message,sizeof(message),MSG_NOSIGNAL);
-	
-	if(message[recvbytes-1]=='0'){
-		end_t = clock();
-	}
+	time(&end_t);
 	double total_t = difftime(end_t, start_t);
     double rate = sent*8/(1000*total_t);
     printf("Sent=%d KB, Rate=%.3f Mbps\n",sent,rate);
