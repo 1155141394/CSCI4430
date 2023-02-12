@@ -65,7 +65,7 @@ int run_server(int port, int queue_size) {
 	}
 
 	// (3b) Bind to the port.
-	memset(&addr, 0, sizeof(addr)); 
+	//memset(&addr, 0, sizeof(addr)); 
 	// addr.sin_family = AF_INET; 
 	// addr.sin_addr.s_addr = INADDR_ANY; 
 	// addr.sin_port = htons(port);
@@ -105,7 +105,7 @@ int send_message(const char *hostname, int port, int interval) {
 	}
 	
 	// (3) Connect to remote server
-	memset(&addr, 0, sizeof(addr)); 
+	//memset(&addr, 0, sizeof(addr)); 
 	// addr.sin_family = AF_INET; 
 	// addr.sin_addr.s_addr = * (unsigned long *) server->h_addr_list[0]; 
 	// addr.sin_port = htons(port);
