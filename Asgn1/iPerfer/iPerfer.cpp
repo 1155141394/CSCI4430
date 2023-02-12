@@ -14,7 +14,7 @@ int handle_connection(int connectionfd) {
 	char buf[MAX_MESSAGE_SIZE];//传输的数据
 
 	// (1) Receive message from client.
-    clock_t start_t, end_t;
+    time_t start_t, end_t;
 	int received = 0;
     start_t = clock();
     while(1){
@@ -37,12 +37,12 @@ int handle_connection(int connectionfd) {
 	}
     end_t = clock();
 	received = received/1000;
-    double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
+    double total_t = difftime(end_t,start_t);
     double rate = received*8/(1000*total_t);
     printf("Received=%d KB, Rate=%.3f Mbps\n",received,rate);
 	
 	// (3) Close connection
-	if((recvbytes = recv(connectionfd,buf,sizeof(buf),0))==0){
+	if((recvbytes = recv(connectionfd,buf,sizeof(buf),MSG_NOSIGNAL))==0){
 		close(connectionfd);
 	}
 	return 0;
@@ -115,13 +115,13 @@ int send_message(const char *hostname, int port, int interval) {
         return -1;
     }
 	// (4) Send message to remote server
-	clock_t start_t, end_t, middle_t;
-	start_t = clock();
+	time_t start_t, end_t, middle_t;
+	time(&start_t);
 	int sent = 0; 
 	int sendbytes;
 	while(1){
-		middle_t = clock();
-		if((double)(middle_t - start_t)/CLOCKS_PER_SEC>=interval){
+		time(&middle_t);
+		if(difftime(middle_t,start_t)>=(double)interval){
 			break;
 		}
 		if((sendbytes=send(sockfd, message, MAX_MESSAGE_SIZE, MSG_NOSIGNAL))==-1){
@@ -131,13 +131,13 @@ int send_message(const char *hostname, int port, int interval) {
 	}
 	sent = sent/1000;
 	char finish[2]="1";
-	send(sockfd,finish,strlen(finish),0);
+	send(sockfd,finish,strlen(finish),MSG_NOSIGNAL);
 	int recvbytes = recv(sockfd,message,sizeof(message),MSG_NOSIGNAL);
-	//int len = strlen(message);
+	
 	if(message[recvbytes-1]=='0'){
 		end_t = clock();
 	}
-	double total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
+	double total_t = difftime(end_t, start_t);
     double rate = sent*8/(1000*total_t);
     printf("Sent=%d KB, Rate=%.3f Mbps\n",sent,rate);
 	// (5) Close connection
